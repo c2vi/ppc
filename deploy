@@ -1,0 +1,38 @@
+#!/bin/sh
+set -e
+
+HOST=ouranos
+DIR=/var/minecraft/webserver/ppc
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+cd $SCRIPT_DIR
+
+[[ "$IS_MIZE_DEV_SHELL" != "true" ]] && (echo "you need to be in a mize devshell, to use this script"; exit 1)
+
+# upload src
+rsync -r -u -v --exclude .git --exclude target --exclude dist --mkpath . $HOST:$DIR/src
+
+# build and upload module-ppc
+cargo build --lib --release
+mkdir -p ./dist/x86_64-linux-gnu/lib
+cp ./target/release/libmize_module_ppc.so ./dist/x86_64-linux-gnu/lib/
+rsync -r -u -v --exclude .git --exclude target --exclude dist --mkpath ./dist/x86_64-linux-gnu/* $HOST:$DIR/src/docker/modules/ppc/
+
+
+# build and upload module-mize
+cd /home/me/work/mize
+cargo build --no-default-features --features os-target --release
+mkdir -p ./dist/x86_64-linux-gnu
+cp ./target/release/mize ./dist/x86_64-linux-gnu/
+patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 ./dist/x86_64-linux-gnu/mize
+rsync -r -u -v --exclude .git --exclude target --exclude dist --mkpath ./dist/x86_64-linux-gnu/* $HOST:$DIR/src/docker/modules/mize/
+
+
+cd $SCRIPT_DIR
+
+if [[ "$1" == "u" ]] # only upload
+then
+  echo not running docker compuse up -d
+else
+  ssh $HOST 'sh -c "cd /var/minecraft && docker compose up -d --build ppc-webseite ppc-db ppc-adminer ppc-webdb"'
+fi

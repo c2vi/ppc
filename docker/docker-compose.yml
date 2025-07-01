@@ -1,0 +1,59 @@
+# this compose file is to be included in the other compose file on ouranos... and the proxy network as well as traefik are defined in the other compose files
+
+
+services:
+  ppc-db:
+    image: mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: example
+    ports:
+      - 127.0.0.1:33333:3306
+      - "[::1]:33333:3306"
+    networks:
+      - "ppc"
+
+  ppc-webseite:
+    build: .
+    restart: always
+    networks:
+      - "ppc"
+    volumes:
+      - "../../mize-store:/mize"
+
+  ppc-webdb:
+    image: webdb/app
+    restart: always
+    networks:
+      - "proxy"
+      - "ppc"
+
+  ppc-adminer:
+    # thanks https://github.com/jeliebig/Adminer-Autologin
+    image: ghcr.io/jeliebig/adminer-autologin
+    networks:
+      - "proxy"
+      - "ppc"
+    restart: always
+    environment:
+      ADMINER_PLUGINS: login-env-vars
+      # Without loading other plugins you can choose one of these:
+      # Format: driver_name -> db_name
+      # - server -> MySQL
+      # - sqlite -> SQLite3
+      # - sqlite2 -> SQLite2
+      # - pgsql -> PostgreSQL
+      # - oracle -> Oracle (beta)
+      # - mssql -> MS SQL (beta)
+      # - mongo -> MongoDB (alpha)
+      # - elastic -> Elasticsearch (beta)
+      ADMINER_DRIVER: server
+      ADMINER_SERVER: ppc-db
+      ADMINER_USERNAME: root
+      ADMINER_PASSWORD: example
+      ADMINER_DB: db
+
+networks:
+  ppc:
+    name: "ppc"
+

@@ -1,0 +1,12 @@
+[package]
+name = "ppc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.8.4"
+mize = { git = "https://github.com/c2vi/mize", default-features = false, features = [ "os-target" ] }
+
+[lib]
+name = "mize_module_ppc"
+crate-type =["cdylib", "rlib"]
