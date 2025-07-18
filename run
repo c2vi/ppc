@@ -1,0 +1,19 @@
+
+set -e
+
+export MIZE_CONFIG=module_dir.ppc=/home/me/work/ppc/dist/x86_64-linux-gnu:load_modules=ppc:namespace=ppc.social
+
+# build and upload module-ppc
+cargo build --lib --release
+mkdir -p ./dist/x86_64-linux-gnu/lib
+cp ./target/release/libmize_module_ppc.so ./dist/x86_64-linux-gnu/lib/
+rsync -r -u --delete ./static ./dist/x86_64-linux-gnu/
+
+
+# build and upload module-mize
+cd /home/me/work/mize
+cargo build --no-default-features --features os-target --release
+mkdir -p ./dist/x86_64-linux-gnu/bin
+cp ./target/release/mize ./dist/x86_64-linux-gnu/bin
+
+~/work/mize/dist/x86_64-linux-gnu/bin/mize run

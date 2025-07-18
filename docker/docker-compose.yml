@@ -7,6 +7,8 @@ services:
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: example
+    volumes:
+      - ../../mariadb-data:/var/lib/mysql
     ports:
       - 127.0.0.1:33333:3306
       - "[::1]:33333:3306"
@@ -16,14 +18,19 @@ services:
   ppc-webseite:
     build: .
     restart: always
+    environment:
+      - "MIZE_CONFIG=module_dir.ppc=/modules/ppc:load_modules=ppc:store_path=/mize:namespace=ppc.social"
     networks:
       - "ppc"
+      - "proxy"
     volumes:
       - "../../mize-store:/mize"
 
   ppc-webdb:
     image: webdb/app
     restart: always
+    volumes:
+      - "../../webdb-data:/root/.webdb"
     networks:
       - "proxy"
       - "ppc"

@@ -16,15 +16,16 @@ rsync -r -u -v --exclude .git --exclude target --exclude dist --mkpath . $HOST:$
 cargo build --lib --release
 mkdir -p ./dist/x86_64-linux-gnu/lib
 cp ./target/release/libmize_module_ppc.so ./dist/x86_64-linux-gnu/lib/
+rsync -r -u --delete ./static ./dist/x86_64-linux-gnu/
 rsync -r -u -v --exclude .git --exclude target --exclude dist --mkpath ./dist/x86_64-linux-gnu/* $HOST:$DIR/src/docker/modules/ppc/
 
 
 # build and upload module-mize
 cd /home/me/work/mize
 cargo build --no-default-features --features os-target --release
-mkdir -p ./dist/x86_64-linux-gnu
-cp ./target/release/mize ./dist/x86_64-linux-gnu/
-patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 ./dist/x86_64-linux-gnu/mize
+mkdir -p ./dist/x86_64-linux-gnu/bin
+cp ./target/release/mize ./dist/x86_64-linux-gnu/bin
+patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 ./dist/x86_64-linux-gnu/bin/mize
 rsync -r -u -v --exclude .git --exclude target --exclude dist --mkpath ./dist/x86_64-linux-gnu/* $HOST:$DIR/src/docker/modules/mize/
 
 
